@@ -4,8 +4,46 @@
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript">
 
-      function getData() {
-        var data = '';
+    date_from_iso= function(s){
+        var D, M= [], hm, min= 0, d2,
+        Rx=  /([\d:]+)(\.\d+)?(Z|(([+\-])(\d\d):(\d\d))?)?$/;
+        D= s.substring(0, 10).split('-');
+        if(s.length> 11){
+            M= s.substring(11).match(Rx) || [];
+            if(M[1]) D= D.concat(M[1].split(':'));
+            if(M[2]) D.push(Math.round(M[2]*1000));// msec
+        }
+        for(var i= 0, L= D.length; i<L; i++){
+            D[i]= parseInt(D[i], 10);
+        }
+        D[1]-= 1;
+        while(D.length< 6) D.push(0);
+        if(M[4]){
+            min= parseInt(M[6])*60+ parseInt(M[7], 10);// timezone not UTC
+            if(M[5]== '+') min*= -1;
+        }
+        try{
+            d2= date_fromUTCArray(D);
+            if(min) d2.setUTCMinutes(d2.getUTCMinutes()+ min);
+        }
+        catch(er){
+            // bad input
+        }
+        return d2;
+    }
+    date_fromUTCArray= function(A){
+        var D= new Date;
+        while(A.length < 7) A.push(0);
+        var T= A.splice(3, A.length);
+        D.setUTCFullYear.apply(D, A);
+        D.setUTCHours.apply(D, T);
+        return D;
+    }
+
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
 
         jQuery.ajax({
           jsonpCallback: "_testcb",
@@ -13,36 +51,27 @@
           cache: false,
           url:'http://deathstar:8002/', 
           success:function(json){
-            data = json;
+            var decoded = JSON.parse(json);
+            for (var i = decoded.length - 1; i >= 0; i--) {
+              var date = decoded[i][0];
+              var deserialized_date = date_from_iso(date);
+              decoded[i][0] = deserialized_date;
+            };
+            console.log(decoded);
+            data.addRows(decoded);
+            chart.draw(data, options);
           },
           error: function(jqXHR, textStatus, errorThrown) {
             console.log('error ' + textStatus + " " + errorThrown);
           }
         });
-        function _testcb(json) {
-          console.log(json);
-        }
-        return data;
-      }
 
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
-      var data;
-      function drawChart() {
-        data = new google.visualization.DataTable();
-        console.log(getData());
-        data.addColumn('string', 'Дата');
+        data.addColumn('date', 'Дата');
         data.addColumn('number', 'Процессор');
         data.addColumn('number', 'Корпус');
-        data.addRows([
-          ['2004', 1000, 400],
-          ['2005', 1170, 460],
-          ['2006',  860, 580],
-          ['2007', 1030, 540]
-        ]);
 
         var options = {
-          title: 'Company Performance'
+          title: 'График температур'
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
