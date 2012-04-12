@@ -1,14 +1,32 @@
 <html>
   <head>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript">
+
+      function getData() {
+        var url = 'http://deathstar:8002/';
+        var data = '';
+
+        jQuery.ajax({
+          url:url, success:function(json){
+            data = json;
+          }, 
+          async:false
+        });
+
+        return data;
+      }
+
       google.load("visualization", "1", {packages:["corechart"]});
       google.setOnLoadCallback(drawChart);
+      var data;
       function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Year');
-        data.addColumn('number', 'Sales');
-        data.addColumn('number', 'Expenses');
+        data = new google.visualization.DataTable();
+        console.log(getData());
+        data.addColumn('string', 'Дата');
+        data.addColumn('number', 'Процессор');
+        data.addColumn('number', 'Корпус');
         data.addRows([
           ['2004', 1000, 400],
           ['2005', 1170, 460],
