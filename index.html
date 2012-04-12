@@ -5,11 +5,13 @@
     <script type="text/javascript">
 
       function getData() {
-        var url = 'http://deathstar:8003/data';
         var data = '';
 
         jQuery.ajax({
-          url:url, success:function(json){
+          jsonpCallback: "_testcb",
+          cache: false,
+          url:'http://deathstar:8002/', 
+          success:function(json){
             data = json;
           }, 
           async:false
