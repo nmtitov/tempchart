@@ -9,6 +9,7 @@
 
         jQuery.ajax({
           jsonpCallback: "_testcb",
+          dataType: "jsonp",
           cache: false,
           url:'http://deathstar:8002/', 
           success:function(json){
